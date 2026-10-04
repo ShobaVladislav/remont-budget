@@ -50,20 +50,54 @@ header{display:flex;justify-content:space-between;gap:15px;align-items:center;ma
 }
 @media(min-width:561px){.mobile-nav{display:none}}
 </style>
+
 <style>
+/* Clean layout: one normal page scroll, sticky mobile header */
+html,body{
+  margin:0!important;
+  width:100%!important;
+  min-height:100%!important;
+  overflow-x:hidden!important;
+}
+body{
+  min-height:100vh!important;
+  overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch!important;
+}
+#app{
+  position:relative!important;
+  width:100%!important;
+  max-width:1200px!important;
+  height:auto!important;
+  min-height:100vh!important;
+  margin:0 auto!important;
+  overflow:visible!important;
+}
+#topHeader,
+#mobileNav{
+  display:none;
+}
+
 @media (max-width:560px){
-  html,body{width:100%;max-width:100%;overflow-x:hidden!important}
-  body{overflow-y:auto!important;height:auto!important;min-height:100vh!important}
+  body{
+    padding-bottom:125px!important;
+  }
+
   #topHeader{
-    position:fixed!important;
-    top:0!important;left:0!important;right:0!important;
-    width:100%!important;height:auto!important;
+    position:sticky!important;
+    top:0!important;
+    width:100%!important;
     z-index:9999!important;
     display:block!important;
+    margin:0!important;
     padding:0!important;
-    transform:none!important;
+    background:rgba(245,247,251,.98)!important;
+    -webkit-backdrop-filter:blur(10px)!important;
+    backdrop-filter:blur(10px)!important;
   }
-  #topHeader.hidden{display:none!important}
+  #topHeader.hidden{
+    display:none!important;
+  }
   #topHeader header{
     position:static!important;
     width:100%!important;
@@ -72,30 +106,41 @@ header{display:flex;justify-content:space-between;gap:15px;align-items:center;ma
     padding:11px 12px!important;
     box-sizing:border-box!important;
     display:flex!important;
-    background:rgba(245,247,251,.98)!important;
-    -webkit-backdrop-filter:blur(10px)!important;
-    backdrop-filter:blur(10px)!important;
+    align-items:center!important;
+    background:transparent!important;
     border-bottom:1px solid var(--line)!important;
     box-shadow:0 2px 10px #1112!important;
   }
-  #topHeader .brand{min-width:0;width:100%}
-  #topHeader .brand h1{font-size:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #topHeader .brand p{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #app{
-    position:relative!important;
+  #topHeader .brand{
     width:100%!important;
-    max-width:100%!important;
-    height:auto!important;
-    min-height:100vh!important;
+    min-width:0!important;
+  }
+  #topHeader .brand h1{
     margin:0!important;
-    overflow:visible!important;
-    padding:84px 10px 160px!important;
+    font-size:20px!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+  #topHeader .brand p{
+    font-size:11px!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  #app{
+    max-width:100%!important;
+    margin:0!important;
+    padding:12px 10px 25px!important;
     box-sizing:border-box!important;
   }
-  #app>.grid{margin-top:0!important}
+
   #mobileNav{
     position:fixed!important;
-    left:8px!important;right:8px!important;bottom:8px!important;
+    left:8px!important;
+    right:8px!important;
+    bottom:8px!important;
     z-index:10000!important;
     display:flex!important;
     flex-direction:column!important;
@@ -105,13 +150,24 @@ header{display:flex;justify-content:space-between;gap:15px;align-items:center;ma
     border:1px solid var(--line)!important;
     border-radius:18px!important;
     box-shadow:0 10px 30px #1112!important;
-    transform:none!important;
   }
-  #mobileNav.hidden{display:none!important}
+  #mobileNav.hidden{
+    display:none!important;
+  }
 }
+
 @media (min-width:561px){
-  #topHeader,#mobileNav{display:none!important}
-  #app{position:relative!important;height:auto!important;overflow:visible!important}
+  #topHeader,
+  #mobileNav{
+    display:none!important;
+  }
+  #app{
+    position:relative!important;
+    height:auto!important;
+    min-height:100vh!important;
+    overflow:visible!important;
+    padding:24px!important;
+  }
 }
 </style>
 </head>
@@ -252,54 +308,5 @@ if(projectCode){
 
 </script>
 
-<style>
-/* Final mobile scroll fix */
-@media (max-width:560px){
-  html,body{
-    width:100%!important;
-    max-width:100%!important;
-    height:auto!important;
-    min-height:100%!important;
-    overflow-x:hidden!important;
-    overflow-y:auto!important;
-    -webkit-overflow-scrolling:touch!important;
-  }
-  body{position:static!important;padding-bottom:110px!important}
-  #app{
-    position:relative!important;
-    inset:auto!important;
-    width:100%!important;
-    height:auto!important;
-    min-height:100vh!important;
-    max-width:100%!important;
-    margin:0!important;
-    overflow:visible!important;
-    padding:82px 12px 130px!important;
-    -webkit-overflow-scrolling:auto!important;
-  }
-  #topHeader{
-    position:fixed!important;
-    top:0!important;
-    left:0!important;
-    right:0!important;
-    width:100%!important;
-    height:auto!important;
-    z-index:5000!important;
-    display:block!important;
-  }
-  #topHeader header{
-    position:static!important;
-    width:100%!important;
-    margin:0!important;
-    box-sizing:border-box!important;
-  }
-  #mobileNav{
-    position:fixed!important;
-    left:0!important;
-    right:0!important;
-    bottom:0!important;
-    z-index:6000!important;
-  }
-}
-</style>
+
 </body></html>
