@@ -78,6 +78,11 @@ body{background:linear-gradient(180deg,#f8f9fc 0%,#f2f4f9 100%)}
   body{padding-bottom:92px}
   .app{width:100%;max-width:100%;padding:0 12px 24px;overflow-x:hidden}
 
+  /* Надёжная фиксированная шапка для iPhone/Android */
+  html,body{overflow-x:hidden!important;width:100%!important;max-width:100%!important}
+  body{position:relative!important}
+  #app{position:relative!important;overflow:visible!important}
+  
   /* Верхняя панель действительно фиксирована */
   #app>header{
     position:fixed!important;
@@ -112,7 +117,7 @@ body{background:linear-gradient(180deg,#f8f9fc 0%,#f2f4f9 100%)}
     padding:7px 8px;font-size:11px;border-radius:9px
   }
   /* место под фиксированную шапку */
-  #app>.grid{margin-top:82px}
+  #app>.grid{margin-top:82px} #app>.layout{padding-top:0!important}
 
   .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
   .grid .card{padding:13px 11px;border-radius:16px}
@@ -189,20 +194,14 @@ body{background:linear-gradient(180deg,#f8f9fc 0%,#f2f4f9 100%)}
 <header><div class="brand"><h1>🏠 Ремонт — бюджет</h1><p>Онлайн-синхронизация · BYN / USD</p></div><div class="actions"><button class="btn" onclick="exportCSV()">Экспорт CSV</button><button class="btn" onclick="changeProject()">Сменить проект</button></div></header>
 <div id="msg" class="notice hidden"></div>
 <div class="grid" id="topStats">
- <div class="card"><div class="stat-label">Бюджет</div><div class="stat" id="budgetBYN">0 BYN</div><div class="sub" id="budgetUSD">≈ $0</div></div>
  <div class="card"><div class="stat-label">Потрачено</div><div class="stat" id="spentBYN">0 BYN</div><div class="sub" id="spentUSD">≈ $0</div></div>
- <div class="card"><div class="stat-label">Остаток</div><div class="stat" id="leftBYN">0 BYN</div><div class="sub" id="leftUSD">≈ $0</div></div>
  <div class="card"><div class="stat-label">Расходов</div><div class="stat" id="count">0</div><div class="sub">позиций</div></div>
 </div>
 <div class="mobile-nav"><button onclick="scrollToId('topStats')">🏠 Обзор</button><button onclick="scrollToId('addExpensePanel')">➕ Расход</button><button onclick="scrollToId('expensesPanel')">🧾 Расходы</button></div>
 <div class="layout"><div>
-<div class="panel"><h2>⚙️ Бюджет</h2><div class="formgrid">
-<div class="field"><label>Бюджет, BYN</label><input id="budget" type="number" step=".01"></div>
-<div class="field"><label>1 USD = BYN</label><input id="rate" type="number" step=".0001" value="3.2"></div></div>
-<button class="add" onclick="saveSettings()">Сохранить</button></div>
 <div class="panel" id="addExpensePanel" style="margin-top:18px"><h2>➕ Добавить расход</h2><div class="formgrid">
 <div class="field"><label>Дата</label><input id="date" type="date"></div><div class="field"><label>Сумма</label><input id="amount" type="number" step=".01" inputmode="decimal" placeholder="0,00"></div>
-<div class="field"><label>Валюта</label><select id="currency"><option>BYN</option><option>USD</option></select></div>
+<div class="field"><label>Валюта</label><select id="currency"><option>BYN</option><option>USD</option></select></div><div class="field" id="expenseRateField"><label>Курс USD/BYN для этой оплаты</label><input id="expenseRate" type="number" step=".0001" inputmode="decimal" value="3.2" placeholder="Например 3,20"><div class="small">1 USD = BYN</div></div>
 <div class="field"><label>Комната</label><select id="room"><option>Квартира целиком</option><option>Кухня</option><option>Ванная</option><option>Спальня</option><option>Гостиная</option><option>Коридор</option><option>Балкон</option><option>Другое</option></select></div>
 <div class="field"><label>Категория</label><select id="category"><option>Материалы</option><option>Работа</option><option>Доставка</option><option>Мебель</option><option>Техника</option><option>Другое</option></select></div>
 <div class="field"><label>Описание</label><input id="desc" placeholder="Например, плитка"></div>
@@ -272,7 +271,7 @@ async function addExpense(){
   let amount=+$('amount').value;
   if(!amount)return alert('Введите сумму.');
   let id=crypto.randomUUID(),files=[...$('cameraPhotos').files,...$('galleryPhotos').files];
-  let {error}=await sb.from('repair_expenses').insert({id,project_key:projectCode,date:$('date').value||today,amount,currency:$('currency').value,room:$('room').value,category:$('category').value,description:$('desc').value.trim()||'Без описания'});
+  let {error}=await sb.from('repair_expenses').insert({id,project_key:projectCode,date:$('date').value||today,amount,currency:$('currency').value,rate:+$('expenseRate').value||settings.rate,room:$('room').value,category:$('category').value,description:$('desc').value.trim()||'Без описания'});
   if(error)return showMsg(error.message);
   try{await uploadPhotos(files,id)}catch(e){showMsg('Расход сохранён, но часть фото не загрузилась: '+e.message)}
   $('amount').value='';$('desc').value='';$('cameraPhotos').value='';$('galleryPhotos').value='';$('photoPreview').textContent='Фото не выбраны';await loadAll();
@@ -285,11 +284,10 @@ async function del(id){
   await sb.from('repair_expenses').delete().eq('id',id).eq('project_key',projectCode);
   await loadAll();
 }
-function toBYN(e){return e.currency==='USD'?+e.amount*settings.rate:+e.amount}
-function render(){ $('budget').value=settings.budget;$('rate').value=settings.rate;let spent=expenses.reduce((s,e)=>s+toBYN(e),0),left=settings.budget-spent;$('budgetBYN').textContent=fmt(settings.budget)+' BYN';$('budgetUSD').textContent='≈ $'+fmt(settings.budget/settings.rate);$('spentBYN').textContent=fmt(spent)+' BYN';$('spentUSD').textContent='≈ $'+fmt(spent/settings.rate);$('leftBYN').textContent=fmt(left)+' BYN';$('leftUSD').textContent='≈ $'+fmt(left/settings.rate);$('count').textContent=expenses.length;
-let rooms=[...new Set(['Квартира целиком','Кухня','Ванная','Спальня','Гостиная','Коридор','Балкон','Другое',...expenses.map(e=>e.room)])];$('filterRoom').innerHTML='<option value="">Все комнаты</option>'+rooms.map(r=>`<option>${r}</option>`).join('');
+function toBYN(e){return e.currency==='USD'?+e.amount*(+e.rate||settings.rate):+e.amount}
+function render(){ let spent=expenses.reduce((s,e)=>s+toBYN(e),0);$('spentBYN').textContent=fmt(spent)+' BYN';$('spentUSD').textContent='≈ $'+fmt(spent/settings.rate);$('count').textContent=expenses.length; let rooms=[...new Set(['Квартира целиком','Кухня','Ванная','Спальня','Гостиная','Коридор','Балкон','Другое',...expenses.map(e=>e.room)])];$('filterRoom').innerHTML='<option value="">Все комнаты</option>'+rooms.map(r=>`<option>${r}</option>`).join('');
 let q=($('search').value||'').toLowerCase(),fr=$('filterRoom').value,list=expenses.filter(e=>(!fr||e.room===fr)&&[e.description,e.room,e.category].join(' ').toLowerCase().includes(q));
-$('tbody').innerHTML=list.length?list.map(e=>`<tr><td>${e.date}</td><td>${e.description}</td><td><span class="badge">${e.room}</span></td><td>${e.category}</td><td><b>${fmt(e.amount)} ${e.currency}</b><div class="small">≈ ${fmt(toBYN(e))} BYN</div></td><td><button class="btn" onclick="photos(${e.id})">📷</button></td><td><button class="delete" onclick="del('${e.id}')">✕</button></td></tr>`).join(''):'<tr><td colspan="7" class="small" style="text-align:center;padding:30px">Расходов пока нет</td></tr>';
+$('tbody').innerHTML=list.length?list.map(e=>`<tr><td>${e.date}</td><td>${e.description}</td><td><span class="badge">${e.room}</span></td><td>${e.category}</td><td><b>${fmt(e.amount)} ${e.currency}</b><div class="small">Курс: ${fmt(+e.rate||settings.rate)} · ≈ ${fmt(toBYN(e))} BYN</div></td><td><button class="btn" onclick="photos(${e.id})">📷</button></td><td><button class="delete" onclick="del('${e.id}')">✕</button></td></tr>`).join(''):'<tr><td colspan="7" class="small" style="text-align:center;padding:30px">Расходов пока нет</td></tr>';
 let rm={},cm={};expenses.forEach(e=>{rm[e.room]=(rm[e.room]||0)+toBYN(e);cm[e.category]=(cm[e.category]||0)+toBYN(e)});$('rooms').innerHTML=Object.entries(rm).sort((a,b)=>b[1]-a[1]).map(x=>bar(x[0],x[1],spent)).join('')||'Нет данных';$('cats').innerHTML=Object.entries(cm).sort((a,b)=>b[1]-a[1]).map(x=>bar(x[0],x[1],spent)).join('')||'Нет данных'}
 function bar(k,v,total){return `<div class="row"><div><b>${k}</b><div class="small">${fmt(v)} BYN · $${fmt(v/settings.rate)}</div></div><div style="width:40%"><div class="bar"><i style="width:${total?Math.min(100,v/total*100):0}%"></i></div></div></div>`}
 async function photos(id){
@@ -304,7 +302,7 @@ async function photos(id){
   let w=window.open('');
   if(w)w.document.write('<title>Фото чека</title><body style="margin:0;background:#111;display:flex;gap:10px;flex-wrap:wrap;justify-content:center">'+urls.map(x=>`<img src="${x}" style="max-width:90%;max-height:90vh;object-fit:contain">`).join('')+'</body>');
 }
-function exportCSV(){let rows=[['Дата','Описание','Комната','Категория','Сумма','Валюта','Сумма BYN']];expenses.forEach(e=>rows.push([e.date,e.description,e.room,e.category,e.amount,e.currency,toBYN(e).toFixed(2)]));let csv='\uFEFF'+rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(';')).join('\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='remont-rashody.csv';a.click()}
+function exportCSV(){let rows=[['Дата','Описание','Комната','Категория','Сумма','Валюта','Курс USD/BYN','Сумма BYN']];expenses.forEach(e=>rows.push([e.date,e.description,e.room,e.category,e.amount,e.currency,(+e.rate||settings.rate).toFixed(4),toBYN(e).toFixed(2)]));let csv='\uFEFF'+rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(';')).join('\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='remont-rashody.csv';a.click()}
 $('search').oninput=render;$('filterRoom').onchange=render;function updatePhotoPreview(){let n=$('cameraPhotos').files.length+$('galleryPhotos').files.length;$('photoPreview').textContent=n?`Выбрано фото: ${n}`:'Фото не выбраны'}$('cameraPhotos').onchange=updatePhotoPreview;$('galleryPhotos').onchange=updatePhotoPreview;
 
 if(projectCode){
