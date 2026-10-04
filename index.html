@@ -292,6 +292,34 @@ body{
   .export-footer-text span{display:block}
 }
 </style>
+
+<style id="desktop-actions-cleanup">
+@media (min-width:900px){
+  #desktopToolbar{display:none!important}
+  #addExpensePanel button[onclick*="scrollToId('addExpensePanel')"],
+  #addExpensePanel button[onclick*="scrollToId(&quot;addExpensePanel&quot;)"]{
+    display:none!important;
+  }
+  .desktop-toolbar,
+  .desktop-toolbar-actions{
+    display:none!important;
+  }
+}
+</style>
+
+<style id="desktop-export-cleanup">
+@media (min-width:900px){
+  #app button[onclick*="exportCSV"]:not(.export-footer button){
+    display:none!important;
+  }
+  #mobileNav button[onclick*="exportCSV"]{
+    display:none!important;
+  }
+  .export-footer{
+    display:flex!important;
+  }
+}
+</style>
 </head>
 <body>
 <div id="auth" class="app">
