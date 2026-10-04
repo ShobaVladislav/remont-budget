@@ -327,7 +327,58 @@ async function photos(id){
   }
   if(!urls.length)return alert('Не удалось открыть фото.');
   let w=window.open('');
-  if(w)w.document.write('<title>Фото чека</title><body style="margin:0;background:#111;display:flex;gap:10px;flex-wrap:wrap;justify-content:center">'+urls.map(x=>`<img src="${x}" style="max-width:90%;max-height:90vh;object-fit:contain">`).join('')+'</body>');
+  if(w)w.document.write('<title>Фото чека</title><body style="margin:0;background:#111;display:flex;gap:10px;flex-wrap:wrap;justify-content:center">'+urls.map(x=>`<img src="${x}" style="max-width:90%;max-height:90vh;object-fit:contain">`).join('')+'
+<style>
+/* Final mobile scroll fix */
+@media (max-width:560px){
+  html,body{
+    width:100%!important;
+    max-width:100%!important;
+    height:auto!important;
+    min-height:100%!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+  body{position:static!important;padding-bottom:110px!important}
+  #app{
+    position:relative!important;
+    inset:auto!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:100vh!important;
+    max-width:100%!important;
+    margin:0!important;
+    overflow:visible!important;
+    padding:82px 12px 130px!important;
+    -webkit-overflow-scrolling:auto!important;
+  }
+  #topHeader{
+    position:fixed!important;
+    top:0!important;
+    left:0!important;
+    right:0!important;
+    width:100%!important;
+    height:auto!important;
+    z-index:5000!important;
+    display:block!important;
+  }
+  #topHeader header{
+    position:static!important;
+    width:100%!important;
+    margin:0!important;
+    box-sizing:border-box!important;
+  }
+  #mobileNav{
+    position:fixed!important;
+    left:0!important;
+    right:0!important;
+    bottom:0!important;
+    z-index:6000!important;
+  }
+}
+</style>
+</body>');
 }
 function exportCSV(){let rows=[['Дата','Описание','Комната','Категория','Сумма','Валюта','Курс USD/BYN','Сумма BYN']];expenses.forEach(e=>rows.push([e.date,e.description,e.room,e.category,e.amount,e.currency,(+e.rate||settings.rate).toFixed(4),toBYN(e).toFixed(2)]));let csv='\uFEFF'+rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(';')).join('\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='remont-rashody.csv';a.click()}
 $('search').oninput=render;$('filterRoom').onchange=render;function updatePhotoPreview(){let n=$('cameraPhotos').files.length+$('galleryPhotos').files.length;$('photoPreview').textContent=n?`Выбрано фото: ${n}`:'Фото не выбраны'}$('cameraPhotos').onchange=updatePhotoPreview;$('galleryPhotos').onchange=updatePhotoPreview;
@@ -339,4 +390,55 @@ if(projectCode){
 }
 
 </script>
+
+<style>
+/* Final mobile scroll fix */
+@media (max-width:560px){
+  html,body{
+    width:100%!important;
+    max-width:100%!important;
+    height:auto!important;
+    min-height:100%!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+  body{position:static!important;padding-bottom:110px!important}
+  #app{
+    position:relative!important;
+    inset:auto!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:100vh!important;
+    max-width:100%!important;
+    margin:0!important;
+    overflow:visible!important;
+    padding:82px 12px 130px!important;
+    -webkit-overflow-scrolling:auto!important;
+  }
+  #topHeader{
+    position:fixed!important;
+    top:0!important;
+    left:0!important;
+    right:0!important;
+    width:100%!important;
+    height:auto!important;
+    z-index:5000!important;
+    display:block!important;
+  }
+  #topHeader header{
+    position:static!important;
+    width:100%!important;
+    margin:0!important;
+    box-sizing:border-box!important;
+  }
+  #mobileNav{
+    position:fixed!important;
+    left:0!important;
+    right:0!important;
+    bottom:0!important;
+    z-index:6000!important;
+  }
+}
+</style>
 </body></html>
