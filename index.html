@@ -22,7 +22,23 @@ header{display:flex;justify-content:space-between;gap:15px;align-items:center;ma
 .tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{font-size:12px;color:var(--muted)}.badge{padding:4px 8px;border-radius:99px;background:#eef2ff;color:#4338ca;font-size:12px}.delete{color:var(--danger);background:none;border:0;cursor:pointer}
 .bar{height:8px;background:#eef0f4;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:var(--accent)}.row{display:flex;justify-content:space-between;gap:10px;margin:12px 0;align-items:center}
 .notice{padding:10px;border-radius:10px;background:#eef2ff;color:#3730a3;font-size:13px;margin-bottom:12px}.error{color:var(--danger);font-size:13px;margin-top:8px}
-@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:1fr}}@media(max-width:560px){.app{padding:14px}.grid{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.full{grid-column:auto}header{flex-direction:column;align-items:flex-start}.actions{width:100%}.actions .btn{flex:1}.field input,.field select,.btn,.add{min-height:46px}}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:1fr}}
+@media(max-width:560px){
+ body{font-size:15px;padding-bottom:78px}.app{padding:10px 10px 24px}.card,.panel{border-radius:18px;padding:15px;box-shadow:0 2px 10px #1111}
+ header{position:sticky;top:0;z-index:20;margin:-10px -10px 12px;padding:12px 10px;background:rgba(245,247,251,.96);backdrop-filter:blur(10px);flex-direction:column;align-items:stretch;gap:8px}
+ .brand h1{font-size:21px}.brand p{font-size:12px;margin:2px 0}.actions{width:100%;gap:7px}.actions .btn{flex:1;min-height:42px;padding:8px 9px;font-size:13px}
+ .grid{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px}.grid .card{padding:12px}.stat-label{font-size:11px}.stat{font-size:19px;margin-top:4px}.sub{font-size:11px}
+ .layout{display:flex;flex-direction:column;gap:10px}.layout>div:first-child{display:flex;flex-direction:column}.layout>div:first-child .panel:nth-child(2){order:1}.layout>div:first-child .panel:nth-child(1){order:2}.layout>div:first-child .panel:nth-child(3){order:3}.layout>div:nth-child(2){order:2}
+ .formgrid{grid-template-columns:1fr;gap:9px}.full{grid-column:auto}.field label{font-size:12px;margin-bottom:4px}.field input,.field select,.btn,.add{min-height:48px;font-size:16px;border-radius:12px}.add{font-size:16px;margin-top:10px}
+ .panel h2{font-size:18px;margin:2px 0 12px}.toolbar{display:grid;grid-template-columns:1.3fr 1fr;gap:7px}.toolbar input,.toolbar select{min-height:44px;font-size:16px}
+ .tablewrap{overflow:visible}.tablewrap table,.tablewrap tbody{display:block;width:100%}.tablewrap thead{display:none}.tablewrap tr{display:block;background:#fff;border:1px solid var(--line);border-radius:15px;margin-bottom:9px;padding:10px}.tablewrap td{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:6px 2px;border:0;white-space:normal;text-align:right}.tablewrap td:before{font-size:11px;color:var(--muted);font-weight:600;text-align:left}.tablewrap td:nth-child(1):before{content:"Дата"}.tablewrap td:nth-child(2):before{content:"Описание"}.tablewrap td:nth-child(3):before{content:"Комната"}.tablewrap td:nth-child(4):before{content:"Категория"}.tablewrap td:nth-child(5):before{content:"Сумма"}.tablewrap td:nth-child(6):before{content:"Фото"}.tablewrap td:nth-child(7){justify-content:flex-end;padding-top:4px}.tablewrap td:nth-child(7):before{content:""}.tablewrap td:nth-child(5){font-weight:800;font-size:16px}.delete{padding:8px 4px;font-size:14px}
+ #photoPreview{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px}.photo-thumb{width:100%;aspect-ratio:1;border-radius:10px;object-fit:cover;border:1px solid var(--line)}
+ .photo-buttons{display:grid!important;grid-template-columns:1fr 1fr;gap:8px!important}.photo-buttons .add{margin:0;font-size:14px;padding:8px}
+ .notice{font-size:12px}.row{margin:9px 0}.bar{height:7px}
+ .mobile-nav{position:fixed;left:0;right:0;bottom:0;z-index:50;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-top:1px solid var(--line)}.mobile-nav button{border:0;background:transparent;font:inherit;font-size:12px;font-weight:700;color:var(--muted);padding:5px}.mobile-nav button:first-child{color:var(--accent)}
+ .auth{margin:7vh auto;max-width:none}.auth h1{font-size:24px}.auth .add{width:100%}
+}
+@media(min-width:561px){.mobile-nav{display:none}}
 </style>
 </head>
 <body>
@@ -40,26 +56,27 @@ header{display:flex;justify-content:space-between;gap:15px;align-items:center;ma
 <div id="app" class="app hidden">
 <header><div class="brand"><h1>🏠 Ремонт — бюджет</h1><p>Онлайн-синхронизация · BYN / USD</p></div><div class="actions"><button class="btn" onclick="exportCSV()">Экспорт CSV</button><button class="btn" onclick="changeProject()">Сменить проект</button></div></header>
 <div id="msg" class="notice hidden"></div>
-<div class="grid">
+<div class="grid" id="topStats">
  <div class="card"><div class="stat-label">Бюджет</div><div class="stat" id="budgetBYN">0 BYN</div><div class="sub" id="budgetUSD">≈ $0</div></div>
  <div class="card"><div class="stat-label">Потрачено</div><div class="stat" id="spentBYN">0 BYN</div><div class="sub" id="spentUSD">≈ $0</div></div>
  <div class="card"><div class="stat-label">Остаток</div><div class="stat" id="leftBYN">0 BYN</div><div class="sub" id="leftUSD">≈ $0</div></div>
  <div class="card"><div class="stat-label">Расходов</div><div class="stat" id="count">0</div><div class="sub">позиций</div></div>
 </div>
+<div class="mobile-nav"><button onclick="scrollToId('topStats')">🏠 Обзор</button><button onclick="scrollToId('addExpensePanel')">➕ Расход</button><button onclick="scrollToId('expensesPanel')">🧾 Расходы</button></div>
 <div class="layout"><div>
 <div class="panel"><h2>⚙️ Бюджет</h2><div class="formgrid">
 <div class="field"><label>Бюджет, BYN</label><input id="budget" type="number" step=".01"></div>
 <div class="field"><label>1 USD = BYN</label><input id="rate" type="number" step=".0001" value="3.2"></div></div>
 <button class="add" onclick="saveSettings()">Сохранить</button></div>
-<div class="panel" style="margin-top:18px"><h2>➕ Добавить расход</h2><div class="formgrid">
-<div class="field"><label>Дата</label><input id="date" type="date"></div><div class="field"><label>Сумма</label><input id="amount" type="number" step=".01"></div>
+<div class="panel" id="addExpensePanel" style="margin-top:18px"><h2>➕ Добавить расход</h2><div class="formgrid">
+<div class="field"><label>Дата</label><input id="date" type="date"></div><div class="field"><label>Сумма</label><input id="amount" type="number" step=".01" inputmode="decimal" placeholder="0,00"></div>
 <div class="field"><label>Валюта</label><select id="currency"><option>BYN</option><option>USD</option></select></div>
 <div class="field"><label>Комната</label><select id="room"><option>Квартира целиком</option><option>Кухня</option><option>Ванная</option><option>Спальня</option><option>Гостиная</option><option>Коридор</option><option>Балкон</option><option>Другое</option></select></div>
 <div class="field"><label>Категория</label><select id="category"><option>Материалы</option><option>Работа</option><option>Доставка</option><option>Мебель</option><option>Техника</option><option>Другое</option></select></div>
 <div class="field"><label>Описание</label><input id="desc" placeholder="Например, плитка"></div>
-<div class="field full"><label>Фото чеков — можно несколько</label><div style="display:flex;gap:10px;flex-wrap:wrap;margin:8px 0"><button type="button" class="add" onclick="$('cameraPhotos').click()">📷 Сделать фото</button><button type="button" class="add" onclick="$('galleryPhotos').click()">🖼️ Выбрать из галереи</button></div><input id="cameraPhotos" type="file" accept="image/*" capture="environment" style="display:none"><input id="galleryPhotos" type="file" accept="image/*" multiple style="display:none"><div id="photoPreview" class="small">Фото не выбраны</div></div>
+<div class="field full"><label>Фото чеков — можно несколько</label><div class="photo-buttons" style="display:flex;gap:10px;flex-wrap:wrap;margin:8px 0"><button type="button" class="add" onclick="$('cameraPhotos').click()">📷 Сделать фото</button><button type="button" class="add" onclick="$('galleryPhotos').click()">🖼️ Выбрать из галереи</button></div><input id="cameraPhotos" type="file" accept="image/*" capture="environment" style="display:none"><input id="galleryPhotos" type="file" accept="image/*" multiple style="display:none"><div id="photoPreview" class="small">Фото не выбраны</div></div>
 </div><button class="add" onclick="addExpense()">Добавить расход</button></div>
-<div class="panel" style="margin-top:18px"><h2>🧾 Расходы</h2><div class="toolbar"><input id="search" placeholder="Поиск"><select id="filterRoom"><option value="">Все комнаты</option></select></div>
+<div class="panel" id="expensesPanel" style="margin-top:18px"><h2>🧾 Расходы</h2><div class="toolbar"><input id="search" placeholder="Поиск"><select id="filterRoom"><option value="">Все комнаты</option></select></div>
 <div class="tablewrap"><table><thead><tr><th>Дата</th><th>Описание</th><th>Комната</th><th>Категория</th><th>Сумма</th><th>Фото</th><th></th></tr></thead><tbody id="tbody"></tbody></table></div></div>
 </div><div>
 <div class="panel"><h2>📊 По комнатам</h2><div id="rooms"></div></div>
@@ -68,6 +85,7 @@ header{display:flex;justify-content:space-between;gap:15px;align-items:center;ma
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+function scrollToId(id){const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:"smooth",block:"start"})}
 const SUPABASE_URL="https://dseyaezdgbqquqtgsnrs.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable_9JOQwePm9RkqMzDLSRLr0A_mOceBR7j";
 let sb=null, projectCode=localStorage.getItem('repair_project_code')||'', settings={budget:0,rate:3.2}, expenses=[];
