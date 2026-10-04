@@ -29,17 +29,16 @@ header{display:flex;justify-content:space-between;gap:15px;align-items:center;ma
 <div id="auth" class="app">
  <div class="card auth">
   <h1>🏠 Ремонт — бюджет</h1>
-  <p class="small">Войдите, чтобы расходы синхронизировались между компьютером и iPhone.</p>
-  <div class="field"><label>Email</label><input id="email" type="email" placeholder="you@example.com"></div>
-  <div class="field" style="margin-top:10px"><label>Пароль</label><input id="password" type="password" placeholder="Минимум 6 символов"></div>
-  <button class="add" onclick="signIn()">Войти</button>
-  <button class="btn" style="width:100%;margin-top:8px" onclick="signUp()">Создать аккаунт</button>
+  <p class="small">Введите код вашего проекта. Один и тот же код можно использовать на компьютере и iPhone.</p>
+  <div class="field"><label>Код проекта</label><input id="projectCode" type="text" placeholder="Например: REMONT-7K4P9" autocomplete="off" autocapitalize="characters"></div>
+  <button class="add" onclick="enterProject()">Открыть проект</button>
+  <div class="small" style="margin-top:12px">Код проекта — это ключ доступа к вашим данным. Не публикуйте его.</div>
   <div id="authMsg" class="error"></div>
  </div>
 </div>
 
 <div id="app" class="app hidden">
-<header><div class="brand"><h1>🏠 Ремонт — бюджет</h1><p>Онлайн-синхронизация · BYN / USD</p></div><div class="actions"><button class="btn" onclick="exportCSV()">Экспорт CSV</button><button class="btn" onclick="signOut()">Выйти</button></div></header>
+<header><div class="brand"><h1>🏠 Ремонт — бюджет</h1><p>Онлайн-синхронизация · BYN / USD</p></div><div class="actions"><button class="btn" onclick="exportCSV()">Экспорт CSV</button><button class="btn" onclick="changeProject()">Сменить проект</button></div></header>
 <div id="msg" class="notice hidden"></div>
 <div class="grid">
  <div class="card"><div class="stat-label">Бюджет</div><div class="stat" id="budgetBYN">0 BYN</div><div class="sub" id="budgetUSD">≈ $0</div></div>
@@ -70,22 +69,72 @@ header{display:flex;justify-content:space-between;gap:15px;align-items:center;ma
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL="https://dseyaezdgbqquqtgsnrs.supabase.co";
-const SUPABASE_ANON_KEY="sb_publishable_9JOQwePm9RkqMzDLSRLr0A_mOceBR7j";
-const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-let user=null, settings={budget:0,rate:3.2}, expenses=[];
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_9JOQwePm9RkqMzDLSRLr0A_mOceBR7j";
+let sb=null, projectCode=localStorage.getItem('repair_project_code')||'', settings={budget:0,rate:3.2}, expenses=[];
 const $=id=>document.getElementById(id), fmt=n=>new Intl.NumberFormat('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
 const today=new Date().toISOString().slice(0,10);$('date').value=today;
-function configured(){return !SUPABASE_URL.startsWith("YOUR_")&&!SUPABASE_ANON_KEY.startsWith("YOUR_")}
+
 function authMsg(x){$('authMsg').textContent=x}
-async function signUp(){if(!configured())return authMsg('Сначала вставьте URL и Publishable Key из Supabase в index.html.');let email=$('email').value,p=$('password').value;if(p.length<6)return authMsg('Пароль должен быть не менее 6 символов.');let {error}=await sb.auth.signUp({email,password:p});authMsg(error?error.message:'Проверьте почту и подтвердите аккаунт.')}
-async function signIn(){if(!configured())return authMsg('Сначала вставьте URL и Publishable Key из Supabase в index.html.');let {data,error}=await sb.auth.signInWithPassword({email:$('email').value,password:$('password').value});if(error)return authMsg(error.message);user=data.user;await loadAll()}
-async function signOut(){await sb.auth.signOut();location.reload()}
-async function loadAll(){if(!user)return; $('auth').classList.add('hidden');$('app').classList.remove('hidden');let s=await sb.from('repair_settings').select('*').eq('user_id',user.id).maybeSingle();if(s.data){settings={budget:+s.data.budget,rate:+s.data.rate}}else{await sb.from('repair_settings').insert({user_id:user.id,budget:0,rate:3.2})}let r=await sb.from('repair_expenses').select('*').eq('user_id',user.id).order('date',{ascending:false});expenses=r.data||[];render()}
+function validProjectCode(v){return /^[A-Za-z0-9-]{6,32}$/.test(v)}
+function makeClient(code){
+  return supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{
+    global:{headers:{'x-project-key':code}}
+  });
+}
+function enterProject(){
+  const code=$('projectCode').value.trim().toUpperCase();
+  if(!validProjectCode(code)) return authMsg('Код: 6–32 символа, только латинские буквы, цифры и дефис.');
+  projectCode=code;
+  localStorage.setItem('repair_project_code',projectCode);
+  sb=makeClient(projectCode);
+  loadAll();
+}
+function changeProject(){
+  localStorage.removeItem('repair_project_code');
+  location.reload();
+}
+async function loadAll(){
+  if(!sb||!projectCode)return;
+  $('auth').classList.add('hidden');$('app').classList.remove('hidden');
+  let s=await sb.from('repair_settings').select('*').eq('project_key',projectCode).maybeSingle();
+  if(s.error){showMsg(s.error.message);return}
+  if(s.data){settings={budget:+s.data.budget,rate:+s.data.rate}}
+  else{
+    let ins=await sb.from('repair_settings').insert({project_key:projectCode,budget:0,rate:3.2});
+    if(ins.error){showMsg(ins.error.message);return}
+  }
+  let r=await sb.from('repair_expenses').select('*').eq('project_key',projectCode).order('date',{ascending:false});
+  if(r.error){showMsg(r.error.message);return}
+  expenses=r.data||[];render();
+}
 function showMsg(t){$('msg').textContent=t;$('msg').classList.remove('hidden');setTimeout(()=>$('msg').classList.add('hidden'),3000)}
-async function saveSettings(){settings.budget=+$('budget').value||0;settings.rate=+$('rate').value||3.2;let {error}=await sb.from('repair_settings').upsert({user_id:user.id,budget:settings.budget,rate:settings.rate});if(error)return showMsg(error.message);render()}
-async function uploadPhotos(files,expenseId){let urls=[];for(const f of files){let path=user.id+'/'+expenseId+'/'+crypto.randomUUID()+'.jpg';let {error}=await sb.storage.from('repair-receipts').upload(path,f,{contentType:f.type,upsert:false});if(error)throw error;let {data}=sb.storage.from('repair-receipts').getPublicUrl(path);urls.push({expense_id:expenseId,path,url:data.publicUrl})}if(urls.length){let {error}=await sb.from('repair_photos').insert(urls);if(error)throw error}}
-async function addExpense(){let amount=+$('amount').value;if(!amount)return alert('Введите сумму.');let id=crypto.randomUUID(),files=[...$('photos').files];let {error}=await sb.from('repair_expenses').insert({id,user_id:user.id,date:$('date').value||today,amount,currency:$('currency').value,room:$('room').value,category:$('category').value,description:$('desc').value.trim()||'Без описания'});if(error)return showMsg(error.message);try{await uploadPhotos(files,id)}catch(e){showMsg('Расход сохранён, но часть фото не загрузилась: '+e.message)}$('amount').value='';$('desc').value='';$('photos').value='';$('photoPreview').textContent='Фото не выбраны';await loadAll()}
-async function del(id){if(!confirm('Удалить расход и его фото?'))return;await sb.from('repair_photos').delete().eq('expense_id',id);await sb.from('repair_expenses').delete().eq('id',id).eq('user_id',user.id);await loadAll()}
+async function saveSettings(){settings.budget=+$('budget').value||0;settings.rate=+$('rate').value||3.2;let {error}=await sb.from('repair_settings').upsert({project_key:projectCode,budget:settings.budget,rate:settings.rate});if(error)return showMsg(error.message);render()}
+async function uploadPhotos(files,expenseId){
+  for(const f of files){
+    const path=projectCode+'/'+expenseId+'/'+crypto.randomUUID()+'.jpg';
+    let {error}=await sb.storage.from('repair-receipts').upload(path,f,{contentType:f.type||'image/jpeg',upsert:false});
+    if(error)throw error;
+    let ins=await sb.from('repair_photos').insert({expense_id:expenseId,project_key:projectCode,path});
+    if(ins.error)throw ins.error;
+  }
+}
+async function addExpense(){
+  let amount=+$('amount').value;
+  if(!amount)return alert('Введите сумму.');
+  let id=crypto.randomUUID(),files=[...$('photos').files];
+  let {error}=await sb.from('repair_expenses').insert({id,project_key:projectCode,date:$('date').value||today,amount,currency:$('currency').value,room:$('room').value,category:$('category').value,description:$('desc').value.trim()||'Без описания'});
+  if(error)return showMsg(error.message);
+  try{await uploadPhotos(files,id)}catch(e){showMsg('Расход сохранён, но часть фото не загрузилась: '+e.message)}
+  $('amount').value='';$('desc').value='';$('photos').value='';$('photoPreview').textContent='Фото не выбраны';await loadAll();
+}
+async function del(id){
+  if(!confirm('Удалить расход и его фото?'))return;
+  let ph=await sb.from('repair_photos').select('path').eq('expense_id',id).eq('project_key',projectCode);
+  if(ph.data){for(const x of ph.data){await sb.storage.from('repair-receipts').remove([x.path])}}
+  await sb.from('repair_photos').delete().eq('expense_id',id).eq('project_key',projectCode);
+  await sb.from('repair_expenses').delete().eq('id',id).eq('project_key',projectCode);
+  await loadAll();
+}
 function toBYN(e){return e.currency==='USD'?+e.amount*settings.rate:+e.amount}
 function render(){ $('budget').value=settings.budget;$('rate').value=settings.rate;let spent=expenses.reduce((s,e)=>s+toBYN(e),0),left=settings.budget-spent;$('budgetBYN').textContent=fmt(settings.budget)+' BYN';$('budgetUSD').textContent='≈ $'+fmt(settings.budget/settings.rate);$('spentBYN').textContent=fmt(spent)+' BYN';$('spentUSD').textContent='≈ $'+fmt(spent/settings.rate);$('leftBYN').textContent=fmt(left)+' BYN';$('leftUSD').textContent='≈ $'+fmt(left/settings.rate);$('count').textContent=expenses.length;
 let rooms=[...new Set(['Квартира целиком','Кухня','Ванная','Спальня','Гостиная','Коридор','Балкон','Другое',...expenses.map(e=>e.room)])];$('filterRoom').innerHTML='<option value="">Все комнаты</option>'+rooms.map(r=>`<option>${r}</option>`).join('');
@@ -93,9 +142,26 @@ let q=($('search').value||'').toLowerCase(),fr=$('filterRoom').value,list=expens
 $('tbody').innerHTML=list.length?list.map(e=>`<tr><td>${e.date}</td><td>${e.description}</td><td><span class="badge">${e.room}</span></td><td>${e.category}</td><td><b>${fmt(e.amount)} ${e.currency}</b><div class="small">≈ ${fmt(toBYN(e))} BYN</div></td><td><button class="btn" onclick="photos(${e.id})">📷</button></td><td><button class="delete" onclick="del('${e.id}')">✕</button></td></tr>`).join(''):'<tr><td colspan="7" class="small" style="text-align:center;padding:30px">Расходов пока нет</td></tr>';
 let rm={},cm={};expenses.forEach(e=>{rm[e.room]=(rm[e.room]||0)+toBYN(e);cm[e.category]=(cm[e.category]||0)+toBYN(e)});$('rooms').innerHTML=Object.entries(rm).sort((a,b)=>b[1]-a[1]).map(x=>bar(x[0],x[1],spent)).join('')||'Нет данных';$('cats').innerHTML=Object.entries(cm).sort((a,b)=>b[1]-a[1]).map(x=>bar(x[0],x[1],spent)).join('')||'Нет данных'}
 function bar(k,v,total){return `<div class="row"><div><b>${k}</b><div class="small">${fmt(v)} BYN · $${fmt(v/settings.rate)}</div></div><div style="width:40%"><div class="bar"><i style="width:${total?Math.min(100,v/total*100):0}%"></i></div></div></div>`}
-async function photos(id){let {data,error}=await sb.from('repair_photos').select('url').eq('expense_id',id);if(error||!data.length)return alert('Фото не прикреплены.');let w=window.open('');if(w)w.document.write('<title>Фото чека</title><body style="margin:0;background:#111;display:flex;gap:10px;flex-wrap:wrap;justify-content:center">'+data.map(x=>`<img src="${x.url}" style="max-width:90%;max-height:90vh;object-fit:contain">`).join('')+'</body>')}
+async function photos(id){
+  let {data,error}=await sb.from('repair_photos').select('path').eq('expense_id',id).eq('project_key',projectCode);
+  if(error||!data||!data.length)return alert('Фото не прикреплены.');
+  let urls=[];
+  for(const x of data){
+    let s=await sb.storage.from('repair-receipts').createSignedUrl(x.path,3600);
+    if(s.data?.signedUrl)urls.push(s.data.signedUrl);
+  }
+  if(!urls.length)return alert('Не удалось открыть фото.');
+  let w=window.open('');
+  if(w)w.document.write('<title>Фото чека</title><body style="margin:0;background:#111;display:flex;gap:10px;flex-wrap:wrap;justify-content:center">'+urls.map(x=>`<img src="${x}" style="max-width:90%;max-height:90vh;object-fit:contain">`).join('')+'</body>');
+}
 function exportCSV(){let rows=[['Дата','Описание','Комната','Категория','Сумма','Валюта','Сумма BYN']];expenses.forEach(e=>rows.push([e.date,e.description,e.room,e.category,e.amount,e.currency,toBYN(e).toFixed(2)]));let csv='\uFEFF'+rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(';')).join('\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='remont-rashody.csv';a.click()}
 $('search').oninput=render;$('filterRoom').onchange=render;$('photos').onchange=()=>{$('photoPreview').textContent=$('photos').files.length?`Выбрано фото: ${$('photos').files.length}`:'Фото не выбраны'};
-sb.auth.getSession().then(({data})=>{if(data.session){user=data.session.user;loadAll()}});
+
+if(projectCode){
+  $('projectCode').value=projectCode;
+  sb=makeClient(projectCode);
+  loadAll();
+}
+
 </script>
 </body></html>
