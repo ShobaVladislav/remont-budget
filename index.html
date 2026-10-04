@@ -57,7 +57,7 @@ header{display:flex;justify-content:space-between;gap:15px;align-items:center;ma
 <div class="field"><label>Комната</label><select id="room"><option>Квартира целиком</option><option>Кухня</option><option>Ванная</option><option>Спальня</option><option>Гостиная</option><option>Коридор</option><option>Балкон</option><option>Другое</option></select></div>
 <div class="field"><label>Категория</label><select id="category"><option>Материалы</option><option>Работа</option><option>Доставка</option><option>Мебель</option><option>Техника</option><option>Другое</option></select></div>
 <div class="field"><label>Описание</label><input id="desc" placeholder="Например, плитка"></div>
-<div class="field full"><label>Фото чеков — можно несколько</label><input id="photos" type="file" accept="image/*" capture="environment" multiple><div id="photoPreview" class="small">Фото не выбраны</div></div>
+<div class="field full"><label>Фото чеков — можно несколько</label><div style="display:flex;gap:10px;flex-wrap:wrap;margin:8px 0"><button type="button" class="add" onclick="$('cameraPhotos').click()">📷 Сделать фото</button><button type="button" class="add" onclick="$('galleryPhotos').click()">🖼️ Выбрать из галереи</button></div><input id="cameraPhotos" type="file" accept="image/*" capture="environment" style="display:none"><input id="galleryPhotos" type="file" accept="image/*" multiple style="display:none"><div id="photoPreview" class="small">Фото не выбраны</div></div>
 </div><button class="add" onclick="addExpense()">Добавить расход</button></div>
 <div class="panel" style="margin-top:18px"><h2>🧾 Расходы</h2><div class="toolbar"><input id="search" placeholder="Поиск"><select id="filterRoom"><option value="">Все комнаты</option></select></div>
 <div class="tablewrap"><table><thead><tr><th>Дата</th><th>Описание</th><th>Комната</th><th>Категория</th><th>Сумма</th><th>Фото</th><th></th></tr></thead><tbody id="tbody"></tbody></table></div></div>
@@ -121,11 +121,11 @@ async function uploadPhotos(files,expenseId){
 async function addExpense(){
   let amount=+$('amount').value;
   if(!amount)return alert('Введите сумму.');
-  let id=crypto.randomUUID(),files=[...$('photos').files];
+  let id=crypto.randomUUID(),files=[...$('cameraPhotos').files,...$('galleryPhotos').files];
   let {error}=await sb.from('repair_expenses').insert({id,project_key:projectCode,date:$('date').value||today,amount,currency:$('currency').value,room:$('room').value,category:$('category').value,description:$('desc').value.trim()||'Без описания'});
   if(error)return showMsg(error.message);
   try{await uploadPhotos(files,id)}catch(e){showMsg('Расход сохранён, но часть фото не загрузилась: '+e.message)}
-  $('amount').value='';$('desc').value='';$('photos').value='';$('photoPreview').textContent='Фото не выбраны';await loadAll();
+  $('amount').value='';$('desc').value='';$('cameraPhotos').value='';$('galleryPhotos').value='';$('photoPreview').textContent='Фото не выбраны';await loadAll();
 }
 async function del(id){
   if(!confirm('Удалить расход и его фото?'))return;
@@ -155,7 +155,7 @@ async function photos(id){
   if(w)w.document.write('<title>Фото чека</title><body style="margin:0;background:#111;display:flex;gap:10px;flex-wrap:wrap;justify-content:center">'+urls.map(x=>`<img src="${x}" style="max-width:90%;max-height:90vh;object-fit:contain">`).join('')+'</body>');
 }
 function exportCSV(){let rows=[['Дата','Описание','Комната','Категория','Сумма','Валюта','Сумма BYN']];expenses.forEach(e=>rows.push([e.date,e.description,e.room,e.category,e.amount,e.currency,toBYN(e).toFixed(2)]));let csv='\uFEFF'+rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(';')).join('\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='remont-rashody.csv';a.click()}
-$('search').oninput=render;$('filterRoom').onchange=render;$('photos').onchange=()=>{$('photoPreview').textContent=$('photos').files.length?`Выбрано фото: ${$('photos').files.length}`:'Фото не выбраны'};
+$('search').oninput=render;$('filterRoom').onchange=render;function updatePhotoPreview(){let n=$('cameraPhotos').files.length+$('galleryPhotos').files.length;$('photoPreview').textContent=n?`Выбрано фото: ${n}`:'Фото не выбраны'}$('cameraPhotos').onchange=updatePhotoPreview;$('galleryPhotos').onchange=updatePhotoPreview;
 
 if(projectCode){
   $('projectCode').value=projectCode;
