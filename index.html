@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ремонт">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>Ремонт — онлайн бюджет</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#6b7280;--line:#e7eaf0;--accent:#4f46e5;--danger:#dc2626}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,Segoe UI,Roboto;color:var(--text);padding-bottom:env(safe-area-inset-bottom)}
+.app{max-width:1200px;margin:auto;padding:24px}.hidden{display:none!important}
+header{display:flex;justify-content:space-between;gap:15px;align-items:center;margin-bottom:20px}.brand h1{margin:0;font-size:28px}.brand p{margin:5px 0;color:var(--muted)}
+.card,.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 3px 12px #1111}.auth{max-width:430px;margin:8vh auto}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}.stat-label{font-size:13px;color:var(--muted)}.stat{font-size:25px;font-weight:800;margin-top:7px}.sub,.small{font-size:12px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:1.15fr .85fr;gap:18px}.formgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}.field input,.field select{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:white}
+.full{grid-column:1/-1}.btn,.add{padding:11px 14px;border-radius:10px;font-weight:700;border:1px solid var(--line);background:white;cursor:pointer}.add{width:100%;margin-top:12px;background:var(--accent);color:white;border-color:var(--accent)}.actions{display:flex;gap:8px;flex-wrap:wrap}
+.toolbar{display:flex;gap:8px;margin-bottom:12px}.toolbar input,.toolbar select{padding:10px;border:1px solid var(--line);border-radius:10px;flex:1}
+.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{font-size:12px;color:var(--muted)}.badge{padding:4px 8px;border-radius:99px;background:#eef2ff;color:#4338ca;font-size:12px}.delete{color:var(--danger);background:none;border:0;cursor:pointer}
+.bar{height:8px;background:#eef0f4;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:var(--accent)}.row{display:flex;justify-content:space-between;gap:10px;margin:12px 0;align-items:center}
+.notice{padding:10px;border-radius:10px;background:#eef2ff;color:#3730a3;font-size:13px;margin-bottom:12px}.error{color:var(--danger);font-size:13px;margin-top:8px}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:1fr}}@media(max-width:560px){.app{padding:14px}.grid{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.full{grid-column:auto}header{flex-direction:column;align-items:flex-start}.actions{width:100%}.actions .btn{flex:1}.field input,.field select,.btn,.add{min-height:46px}}
+</style>
+</head>
+<body>
+<div id="auth" class="app">
+ <div class="card auth">
+  <h1>🏠 Ремонт — бюджет</h1>
+  <p class="small">Войдите, чтобы расходы синхронизировались между компьютером и iPhone.</p>
+  <div class="field"><label>Email</label><input id="email" type="email" placeholder="you@example.com"></div>
+  <div class="field" style="margin-top:10px"><label>Пароль</label><input id="password" type="password" placeholder="Минимум 6 символов"></div>
+  <button class="add" onclick="signIn()">Войти</button>
+  <button class="btn" style="width:100%;margin-top:8px" onclick="signUp()">Создать аккаунт</button>
+  <div id="authMsg" class="error"></div>
+ </div>
+</div>
+
+<div id="app" class="app hidden">
+<header><div class="brand"><h1>🏠 Ремонт — бюджет</h1><p>Онлайн-синхронизация · BYN / USD</p></div><div class="actions"><button class="btn" onclick="exportCSV()">Экспорт CSV</button><button class="btn" onclick="signOut()">Выйти</button></div></header>
+<div id="msg" class="notice hidden"></div>
+<div class="grid">
+ <div class="card"><div class="stat-label">Бюджет</div><div class="stat" id="budgetBYN">0 BYN</div><div class="sub" id="budgetUSD">≈ $0</div></div>
+ <div class="card"><div class="stat-label">Потрачено</div><div class="stat" id="spentBYN">0 BYN</div><div class="sub" id="spentUSD">≈ $0</div></div>
+ <div class="card"><div class="stat-label">Остаток</div><div class="stat" id="leftBYN">0 BYN</div><div class="sub" id="leftUSD">≈ $0</div></div>
+ <div class="card"><div class="stat-label">Расходов</div><div class="stat" id="count">0</div><div class="sub">позиций</div></div>
+</div>
+<div class="layout"><div>
+<div class="panel"><h2>⚙️ Бюджет</h2><div class="formgrid">
+<div class="field"><label>Бюджет, BYN</label><input id="budget" type="number" step=".01"></div>
+<div class="field"><label>1 USD = BYN</label><input id="rate" type="number" step=".0001" value="3.2"></div></div>
+<button class="add" onclick="saveSettings()">Сохранить</button></div>
+<div class="panel" style="margin-top:18px"><h2>➕ Добавить расход</h2><div class="formgrid">
+<div class="field"><label>Дата</label><input id="date" type="date"></div><div class="field"><label>Сумма</label><input id="amount" type="number" step=".01"></div>
+<div class="field"><label>Валюта</label><select id="currency"><option>BYN</option><option>USD</option></select></div>
+<div class="field"><label>Комната</label><select id="room"><option>Квартира целиком</option><option>Кухня</option><option>Ванная</option><option>Спальня</option><option>Гостиная</option><option>Коридор</option><option>Балкон</option><option>Другое</option></select></div>
+<div class="field"><label>Категория</label><select id="category"><option>Материалы</option><option>Работа</option><option>Доставка</option><option>Мебель</option><option>Техника</option><option>Другое</option></select></div>
+<div class="field"><label>Описание</label><input id="desc" placeholder="Например, плитка"></div>
+<div class="field full"><label>Фото чеков — можно несколько</label><input id="photos" type="file" accept="image/*" capture="environment" multiple><div id="photoPreview" class="small">Фото не выбраны</div></div>
+</div><button class="add" onclick="addExpense()">Добавить расход</button></div>
+<div class="panel" style="margin-top:18px"><h2>🧾 Расходы</h2><div class="toolbar"><input id="search" placeholder="Поиск"><select id="filterRoom"><option value="">Все комнаты</option></select></div>
+<div class="tablewrap"><table><thead><tr><th>Дата</th><th>Описание</th><th>Комната</th><th>Категория</th><th>Сумма</th><th>Фото</th><th></th></tr></thead><tbody id="tbody"></tbody></table></div></div>
+</div><div>
+<div class="panel"><h2>📊 По комнатам</h2><div id="rooms"></div></div>
+<div class="panel" style="margin-top:18px"><h2>📁 По категориям</h2><div id="cats"></div></div>
+</div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL="https://dseyaezdgbqquqtgsnrs.supabase.co";
+const SUPABASE_ANON_KEY="sb_publishable_9JOQwePm9RkqMzDLSRLr0A_mOceBR7j";
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+let user=null, settings={budget:0,rate:3.2}, expenses=[];
+const $=id=>document.getElementById(id), fmt=n=>new Intl.NumberFormat('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+const today=new Date().toISOString().slice(0,10);$('date').value=today;
+function configured(){return !SUPABASE_URL.startsWith("YOUR_")&&!SUPABASE_ANON_KEY.startsWith("YOUR_")}
+function authMsg(x){$('authMsg').textContent=x}
+async function signUp(){if(!configured())return authMsg('Сначала вставьте URL и Publishable Key из Supabase в index.html.');let email=$('email').value,p=$('password').value;if(p.length<6)return authMsg('Пароль должен быть не менее 6 символов.');let {error}=await sb.auth.signUp({email,password:p});authMsg(error?error.message:'Проверьте почту и подтвердите аккаунт.')}
+async function signIn(){if(!configured())return authMsg('Сначала вставьте URL и Publishable Key из Supabase в index.html.');let {data,error}=await sb.auth.signInWithPassword({email:$('email').value,password:$('password').value});if(error)return authMsg(error.message);user=data.user;await loadAll()}
+async function signOut(){await sb.auth.signOut();location.reload()}
+async function loadAll(){if(!user)return; $('auth').classList.add('hidden');$('app').classList.remove('hidden');let s=await sb.from('repair_settings').select('*').eq('user_id',user.id).maybeSingle();if(s.data){settings={budget:+s.data.budget,rate:+s.data.rate}}else{await sb.from('repair_settings').insert({user_id:user.id,budget:0,rate:3.2})}let r=await sb.from('repair_expenses').select('*').eq('user_id',user.id).order('date',{ascending:false});expenses=r.data||[];render()}
+function showMsg(t){$('msg').textContent=t;$('msg').classList.remove('hidden');setTimeout(()=>$('msg').classList.add('hidden'),3000)}
+async function saveSettings(){settings.budget=+$('budget').value||0;settings.rate=+$('rate').value||3.2;let {error}=await sb.from('repair_settings').upsert({user_id:user.id,budget:settings.budget,rate:settings.rate});if(error)return showMsg(error.message);render()}
+async function uploadPhotos(files,expenseId){let urls=[];for(const f of files){let path=user.id+'/'+expenseId+'/'+crypto.randomUUID()+'.jpg';let {error}=await sb.storage.from('repair-receipts').upload(path,f,{contentType:f.type,upsert:false});if(error)throw error;let {data}=sb.storage.from('repair-receipts').getPublicUrl(path);urls.push({expense_id:expenseId,path,url:data.publicUrl})}if(urls.length){let {error}=await sb.from('repair_photos').insert(urls);if(error)throw error}}
+async function addExpense(){let amount=+$('amount').value;if(!amount)return alert('Введите сумму.');let id=crypto.randomUUID(),files=[...$('photos').files];let {error}=await sb.from('repair_expenses').insert({id,user_id:user.id,date:$('date').value||today,amount,currency:$('currency').value,room:$('room').value,category:$('category').value,description:$('desc').value.trim()||'Без описания'});if(error)return showMsg(error.message);try{await uploadPhotos(files,id)}catch(e){showMsg('Расход сохранён, но часть фото не загрузилась: '+e.message)}$('amount').value='';$('desc').value='';$('photos').value='';$('photoPreview').textContent='Фото не выбраны';await loadAll()}
+async function del(id){if(!confirm('Удалить расход и его фото?'))return;await sb.from('repair_photos').delete().eq('expense_id',id);await sb.from('repair_expenses').delete().eq('id',id).eq('user_id',user.id);await loadAll()}
+function toBYN(e){return e.currency==='USD'?+e.amount*settings.rate:+e.amount}
+function render(){ $('budget').value=settings.budget;$('rate').value=settings.rate;let spent=expenses.reduce((s,e)=>s+toBYN(e),0),left=settings.budget-spent;$('budgetBYN').textContent=fmt(settings.budget)+' BYN';$('budgetUSD').textContent='≈ $'+fmt(settings.budget/settings.rate);$('spentBYN').textContent=fmt(spent)+' BYN';$('spentUSD').textContent='≈ $'+fmt(spent/settings.rate);$('leftBYN').textContent=fmt(left)+' BYN';$('leftUSD').textContent='≈ $'+fmt(left/settings.rate);$('count').textContent=expenses.length;
+let rooms=[...new Set(['Квартира целиком','Кухня','Ванная','Спальня','Гостиная','Коридор','Балкон','Другое',...expenses.map(e=>e.room)])];$('filterRoom').innerHTML='<option value="">Все комнаты</option>'+rooms.map(r=>`<option>${r}</option>`).join('');
+let q=($('search').value||'').toLowerCase(),fr=$('filterRoom').value,list=expenses.filter(e=>(!fr||e.room===fr)&&[e.description,e.room,e.category].join(' ').toLowerCase().includes(q));
+$('tbody').innerHTML=list.length?list.map(e=>`<tr><td>${e.date}</td><td>${e.description}</td><td><span class="badge">${e.room}</span></td><td>${e.category}</td><td><b>${fmt(e.amount)} ${e.currency}</b><div class="small">≈ ${fmt(toBYN(e))} BYN</div></td><td><button class="btn" onclick="photos(${e.id})">📷</button></td><td><button class="delete" onclick="del('${e.id}')">✕</button></td></tr>`).join(''):'<tr><td colspan="7" class="small" style="text-align:center;padding:30px">Расходов пока нет</td></tr>';
+let rm={},cm={};expenses.forEach(e=>{rm[e.room]=(rm[e.room]||0)+toBYN(e);cm[e.category]=(cm[e.category]||0)+toBYN(e)});$('rooms').innerHTML=Object.entries(rm).sort((a,b)=>b[1]-a[1]).map(x=>bar(x[0],x[1],spent)).join('')||'Нет данных';$('cats').innerHTML=Object.entries(cm).sort((a,b)=>b[1]-a[1]).map(x=>bar(x[0],x[1],spent)).join('')||'Нет данных'}
+function bar(k,v,total){return `<div class="row"><div><b>${k}</b><div class="small">${fmt(v)} BYN · $${fmt(v/settings.rate)}</div></div><div style="width:40%"><div class="bar"><i style="width:${total?Math.min(100,v/total*100):0}%"></i></div></div></div>`}
+async function photos(id){let {data,error}=await sb.from('repair_photos').select('url').eq('expense_id',id);if(error||!data.length)return alert('Фото не прикреплены.');let w=window.open('');if(w)w.document.write('<title>Фото чека</title><body style="margin:0;background:#111;display:flex;gap:10px;flex-wrap:wrap;justify-content:center">'+data.map(x=>`<img src="${x.url}" style="max-width:90%;max-height:90vh;object-fit:contain">`).join('')+'</body>')}
+function exportCSV(){let rows=[['Дата','Описание','Комната','Категория','Сумма','Валюта','Сумма BYN']];expenses.forEach(e=>rows.push([e.date,e.description,e.room,e.category,e.amount,e.currency,toBYN(e).toFixed(2)]));let csv='\uFEFF'+rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(';')).join('\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='remont-rashody.csv';a.click()}
+$('search').oninput=render;$('filterRoom').onchange=render;$('photos').onchange=()=>{$('photoPreview').textContent=$('photos').files.length?`Выбрано фото: ${$('photos').files.length}`:'Фото не выбраны'};
+sb.auth.getSession().then(({data})=>{if(data.session){user=data.session.user;loadAll()}});
+</script>
+</body></html>
