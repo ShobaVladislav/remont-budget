@@ -179,6 +179,29 @@ body{background:linear-gradient(180deg,#f8f9fc 0%,#f2f4f9 100%)}
   .mobile-nav button:active{background:#f0efff}
 }
 </style>
+
+<style>
+/* Надёжная мобильная оболочка: контент прокручивается отдельно от верхней и нижней панелей */
+html,body{width:100%;max-width:100%;overflow:hidden}
+body{height:100dvh}
+#app{position:fixed;inset:0;width:100%;height:100dvh;max-width:none;margin:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:0 16px 170px}
+#topHeader{position:fixed;top:0;left:0;right:0;width:100%;height:auto;z-index:5000;padding:0;display:block!important}
+#topHeader.hidden,#mobileNav.hidden{display:none!important}
+#topHeader header{position:static!important;width:100%;max-width:none;margin:0!important;padding:12px 16px!important;background:rgba(248,249,252,.98);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 2px 12px rgba(23,32,51,.10);display:flex;flex-direction:column;align-items:stretch}
+#topHeader .brand{min-width:0}
+#topHeader .brand h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#topHeader + #mobileNav{position:fixed;left:0;right:0;bottom:0;z-index:5000}
+@media (max-width:560px){
+  #app{padding-top:82px;padding-bottom:170px}
+  #mobileNav{display:flex!important}
+  #mobileNav.hidden{display:none!important}
+}
+@media (min-width:561px){
+  #app{position:relative;height:auto;min-height:100vh;overflow:visible;padding:24px;max-width:1200px;margin:auto}
+  #topHeader{position:static;display:none!important}
+  #mobileNav{display:none!important}
+}
+</style>
 </head>
 <body>
 <div id="auth" class="app">
@@ -192,14 +215,16 @@ body{background:linear-gradient(180deg,#f8f9fc 0%,#f2f4f9 100%)}
  </div>
 </div>
 
+<div id="topHeader" class="top-fixed hidden"><header><div class="brand"><h1>🏠 Ремонт — бюджет</h1><p>Онлайн-синхронизация · BYN / USD</p></div></header></div>
+<div id="mobileNav" class="mobile-nav hidden"><div class="nav-main"><button onclick="scrollToId('topStats')">🏠 Обзор</button><button onclick="scrollToId('addExpensePanel')">➕ Расход</button><button onclick="scrollToId('expensesPanel')">🧾 Расходы</button></div><div class="nav-actions"><button onclick="exportCSV()">⬇️ Экспорт CSV</button><button onclick="changeProject()">🔄 Сменить проект</button></div></div>
 <div id="app" class="app hidden">
-<header><div class="brand"><h1>🏠 Ремонт — бюджет</h1><p>Онлайн-синхронизация · BYN / USD</p></div></header>
+
 <div id="msg" class="notice hidden"></div>
 <div class="grid" id="topStats">
  <div class="card"><div class="stat-label">Потрачено</div><div class="stat" id="spentBYN">0 BYN</div><div class="sub" id="spentUSD">≈ $0</div></div>
  <div class="card"><div class="stat-label">Расходов</div><div class="stat" id="count">0</div><div class="sub">позиций</div></div>
 </div>
-<div class="mobile-nav"><div class="nav-main"><button onclick="scrollToId('topStats')">🏠 Обзор</button><button onclick="scrollToId('addExpensePanel')">➕ Расход</button><button onclick="scrollToId('expensesPanel')">🧾 Расходы</button></div><div class="nav-actions"><button onclick="exportCSV()">⬇️ Экспорт CSV</button><button onclick="changeProject()">🔄 Сменить проект</button></div></div>
+<div class="layout">
 <div class="layout"><div>
 <div class="panel" id="addExpensePanel" style="margin-top:18px"><h2>➕ Добавить расход</h2><div class="formgrid">
 <div class="field"><label>Дата</label><input id="date" type="date"></div><div class="field"><label>Сумма</label><input id="amount" type="number" step=".01" inputmode="decimal" placeholder="0,00"></div>
@@ -246,7 +271,7 @@ function changeProject(){
 }
 async function loadAll(){
   if(!sb||!projectCode)return;
-  $('auth').classList.add('hidden');$('app').classList.remove('hidden');
+  $('auth').classList.add('hidden');$('app').classList.remove('hidden');$('topHeader').classList.remove('hidden');$('mobileNav').classList.remove('hidden');
   let s=await sb.from('repair_settings').select('*').eq('project_key',projectCode).maybeSingle();
   if(s.error){showMsg(s.error.message);return}
   if(s.data){settings={budget:+s.data.budget,rate:+s.data.rate}}
