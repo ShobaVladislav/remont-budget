@@ -25,8 +25,10 @@ header{display:flex;justify-content:space-between;gap:15px;align-items:center;ma
 @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:1fr}}
 @media(max-width:560px){
  html,body{width:100%;max-width:100%;overflow-x:hidden}
- body{font-size:15px;padding-bottom:78px}.app{width:100%;max-width:100%;min-width:0;padding:10px 10px 24px}.card,.panel{width:100%;max-width:100%;min-width:0;border-radius:18px;padding:15px;box-shadow:0 2px 10px #1111}
- header{position:sticky;top:0;left:auto;right:auto;width:100%;max-width:100%;box-sizing:border-box;z-index:1000;margin:0 -10px 10px;padding:12px 10px;background:rgba(245,247,251,.98);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);flex-direction:column;align-items:stretch;gap:8px;box-shadow:0 2px 10px #1112}
+ body{font-size:15px;padding-bottom:126px}.app{width:100%;max-width:100%;min-width:0;padding:10px 10px 24px}.card,.panel{width:100%;max-width:100%;min-width:0;border-radius:18px;padding:15px;box-shadow:0 2px 10px #1111}
+ header{position:fixed;top:0;left:0;right:0;width:100%;max-width:none;box-sizing:border-box;z-index:1000;margin:0;padding:12px 12px;background:rgba(245,247,251,.98);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);flex-direction:column;align-items:stretch;gap:8px;box-shadow:0 2px 10px #1112}
+ #app:not(.hidden){padding-top:92px}
+ header .actions{display:none!important}
  #main{padding-top:0}
  input[type="date"]{display:block;width:100%;min-width:0;max-width:100%;height:48px;padding:10px 8px;box-sizing:border-box;overflow:hidden;appearance:none;-webkit-appearance:none}
  input[type="date"]::-webkit-date-and-time-value{width:100%;text-align:left}
@@ -34,7 +36,7 @@ header{display:flex;justify-content:space-between;gap:15px;align-items:center;ma
  .field{min-width:0;width:100%;max-width:100%}
  .formgrid,.formgrid>*{min-width:0;max-width:100%}
  input,select,button{max-width:100%;min-width:0;box-sizing:border-box}
- .brand h1{font-size:21px}.brand p{font-size:12px;margin:2px 0}.actions{width:100%;gap:7px}.actions .btn{flex:1;min-height:42px;padding:8px 9px;font-size:13px}
+ .brand{min-width:0}.brand h1{font-size:21px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brand p{font-size:12px;margin:2px 0}.actions{width:100%;gap:7px}.actions .btn{flex:1;min-height:42px;padding:8px 9px;font-size:13px}
  .grid{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px}.grid .card{padding:12px}.stat-label{font-size:11px}.stat{font-size:19px;margin-top:4px}.sub{font-size:11px}
  .layout{display:flex;flex-direction:column;gap:10px}.layout>div:first-child{display:flex;flex-direction:column}.layout>div:first-child .panel:nth-child(2){order:1}.layout>div:first-child .panel:nth-child(1){order:2}.layout>div:first-child .panel:nth-child(3){order:3}.layout>div:nth-child(2){order:2}
  .formgrid{grid-template-columns:1fr;gap:9px}.full{grid-column:auto}.field label{font-size:12px;margin-bottom:4px}.field input,.field select,.btn,.add{min-height:48px;font-size:16px;border-radius:12px}.add{font-size:16px;margin-top:10px}
@@ -43,7 +45,7 @@ header{display:flex;justify-content:space-between;gap:15px;align-items:center;ma
  #photoPreview{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px}.photo-thumb{width:100%;aspect-ratio:1;border-radius:10px;object-fit:cover;border:1px solid var(--line)}
  .photo-buttons{display:grid!important;grid-template-columns:1fr 1fr;gap:8px!important}.photo-buttons .add{margin:0;font-size:14px;padding:8px}
  .notice{font-size:12px}.row{margin:9px 0}.bar{height:7px}
- .mobile-nav{position:fixed;left:0;right:0;bottom:0;z-index:50;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-top:1px solid var(--line)}.mobile-nav button{border:0;background:transparent;font:inherit;font-size:12px;font-weight:700;color:var(--muted);padding:5px}.mobile-nav button:first-child{color:var(--accent)}
+ .mobile-nav{position:fixed;left:0;right:0;bottom:0;z-index:1100;display:flex;flex-direction:column;gap:3px;padding:6px 10px calc(6px + env(safe-area-inset-bottom));background:rgba(255,255,255,.97);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);box-shadow:0 -3px 14px #1111}.nav-main,.nav-actions{display:grid;gap:6px}.nav-main{grid-template-columns:repeat(3,1fr)}.nav-actions{grid-template-columns:repeat(2,1fr)}.mobile-nav button{border:0;background:transparent;font:inherit;font-size:12px;font-weight:700;color:var(--muted);padding:5px;min-height:28px}.nav-main button:first-child{color:var(--accent)}.nav-actions button{background:#f4f5fa;border-radius:9px;font-size:11px}
  .auth{margin:7vh auto;max-width:none}.auth h1{font-size:24px}.auth .add{width:100%}
 }
 @media(min-width:561px){.mobile-nav{display:none}}
@@ -191,13 +193,13 @@ body{background:linear-gradient(180deg,#f8f9fc 0%,#f2f4f9 100%)}
 </div>
 
 <div id="app" class="app hidden">
-<header><div class="brand"><h1>🏠 Ремонт — бюджет</h1><p>Онлайн-синхронизация · BYN / USD</p></div><div class="actions"><button class="btn" onclick="exportCSV()">Экспорт CSV</button><button class="btn" onclick="changeProject()">Сменить проект</button></div></header>
+<header><div class="brand"><h1>🏠 Ремонт — бюджет</h1><p>Онлайн-синхронизация · BYN / USD</p></div></header>
 <div id="msg" class="notice hidden"></div>
 <div class="grid" id="topStats">
  <div class="card"><div class="stat-label">Потрачено</div><div class="stat" id="spentBYN">0 BYN</div><div class="sub" id="spentUSD">≈ $0</div></div>
  <div class="card"><div class="stat-label">Расходов</div><div class="stat" id="count">0</div><div class="sub">позиций</div></div>
 </div>
-<div class="mobile-nav"><button onclick="scrollToId('topStats')">🏠 Обзор</button><button onclick="scrollToId('addExpensePanel')">➕ Расход</button><button onclick="scrollToId('expensesPanel')">🧾 Расходы</button></div>
+<div class="mobile-nav"><div class="nav-main"><button onclick="scrollToId('topStats')">🏠 Обзор</button><button onclick="scrollToId('addExpensePanel')">➕ Расход</button><button onclick="scrollToId('expensesPanel')">🧾 Расходы</button></div><div class="nav-actions"><button onclick="exportCSV()">⬇️ Экспорт CSV</button><button onclick="changeProject()">🔄 Сменить проект</button></div></div>
 <div class="layout"><div>
 <div class="panel" id="addExpensePanel" style="margin-top:18px"><h2>➕ Добавить расход</h2><div class="formgrid">
 <div class="field"><label>Дата</label><input id="date" type="date"></div><div class="field"><label>Сумма</label><input id="amount" type="number" step=".01" inputmode="decimal" placeholder="0,00"></div>
