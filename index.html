@@ -51,6 +51,124 @@ header{display:flex;justify-content:space-between;gap:15px;align-items:center;ma
 @media(min-width:561px){.mobile-nav{display:none}}
 </style>
 
+
+<style id="desktop-redesign">
+@media (min-width: 900px){
+  html,body{
+    background:#f3f5f9!important;
+  }
+
+  #app{
+    max-width:1440px!important;
+    padding:28px 34px 70px!important;
+  }
+
+  /* Make the main app feel like a desktop workspace */
+  #app > .grid{
+    display:grid!important;
+    grid-template-columns:minmax(0, 1.55fr) minmax(320px, .75fr)!important;
+    gap:22px!important;
+    align-items:start!important;
+  }
+
+  /* If the page already contains panels, give them consistent desktop cards */
+  #app .panel,
+  #app .card,
+  #app section{
+    border-radius:18px!important;
+  }
+
+  /* Dashboard/stat area spans the full workspace */
+  #topStats{
+    grid-column:1 / -1!important;
+  }
+
+  /* Expense entry gets the wide left column */
+  #addExpensePanel{
+    grid-column:1!important;
+  }
+
+  /* Settings/summary areas sit naturally on the right */
+  #settingsPanel,
+  #summaryPanel,
+  #statsPanel{
+    grid-column:2!important;
+  }
+
+  /* Expense history gets full width */
+  #expensesPanel{
+    grid-column:1 / -1!important;
+  }
+
+  /* Header/brand on desktop */
+  #app header{
+    border-radius:18px!important;
+    margin-bottom:20px!important;
+  }
+
+  /* More comfortable form on large screens */
+  #addExpensePanel .form-grid,
+  #addExpensePanel .grid{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  }
+
+  #addExpensePanel textarea,
+  #addExpensePanel input[type="text"]{
+    min-height:44px!important;
+  }
+
+  /* Expenses table */
+  #expensesPanel table{
+    width:100%!important;
+    border-collapse:separate!important;
+    border-spacing:0!important;
+    font-size:14px!important;
+  }
+
+  #expensesPanel th{
+    position:sticky!important;
+    top:0!important;
+    z-index:3!important;
+    background:#f7f8fb!important;
+    white-space:nowrap!important;
+  }
+
+  #expensesPanel td,
+  #expensesPanel th{
+    padding:11px 10px!important;
+    vertical-align:middle!important;
+  }
+
+  #expensesPanel tbody tr:hover{
+    background:#f7f9fc!important;
+  }
+
+  /* Filters/search, if present */
+  #expensesPanel input,
+  #expensesPanel select{
+    min-height:40px!important;
+  }
+
+  /* Desktop action buttons */
+  #app button{
+    min-height:40px;
+  }
+
+  /* Keep the mobile navigation completely out of desktop */
+  #mobileNav,
+  #topHeader{
+    display:none!important;
+  }
+}
+
+/* Very wide monitors */
+@media (min-width:1250px){
+  #app{
+    padding-left:42px!important;
+    padding-right:42px!important;
+  }
+}
+</style>
 <style>
 /* Clean layout: one normal page scroll, sticky mobile header */
 html,body{
@@ -170,6 +288,39 @@ body{
   }
 }
 </style>
+
+<style id="desktop-toolbar-style">
+.desktop-toolbar{display:none}
+@media (min-width:900px){
+  .desktop-toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+    margin:0 0 20px;
+    padding:18px 20px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:18px;
+    box-shadow:0 5px 18px #1111;
+  }
+  .desktop-toolbar strong{
+    display:block;
+    font-size:18px;
+    margin-bottom:3px;
+  }
+  .desktop-toolbar span{
+    color:var(--muted);
+    font-size:13px;
+  }
+  .desktop-toolbar-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+}
+</style>
 </head>
 <body>
 <div id="auth" class="app">
@@ -186,6 +337,17 @@ body{
 <div id="topHeader" class="top-fixed hidden"><header><div class="brand"><h1>🏠 Ремонт — бюджет</h1><p>Онлайн-синхронизация · BYN / USD</p></div></header></div>
 <div id="mobileNav" class="mobile-nav hidden"><div class="nav-main"><button onclick="scrollToId('topStats')">🏠 Обзор</button><button onclick="scrollToId('addExpensePanel')">➕ Расход</button><button onclick="scrollToId('expensesPanel')">🧾 Расходы</button></div><div class="nav-actions"><button onclick="exportCSV()">⬇️ Экспорт CSV</button><button onclick="changeProject()">🔄 Сменить проект</button></div></div>
 <div id="app" class="app hidden">
+<div id="desktopToolbar" class="desktop-toolbar">
+  <div>
+    <strong>Расходы по ремонту</strong>
+    <span>Управляйте расходами и быстро находите нужные покупки</span>
+  </div>
+  <div class="desktop-toolbar-actions">
+    <button type="button" class="add" onclick="scrollToId('addExpensePanel')">➕ Добавить расход</button>
+    <button type="button" onclick="exportCSV()">⬇️ Экспорт CSV</button>
+  </div>
+</div>
+
 
 <div id="msg" class="notice hidden"></div>
 <div class="grid" id="topStats">
