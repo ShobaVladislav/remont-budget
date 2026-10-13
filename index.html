@@ -21,7 +21,7 @@ header{display:flex;justify-content:space-between;gap:15px;align-items:center;ma
 .toolbar{display:flex;gap:8px;margin-bottom:12px}.toolbar input,.toolbar select{padding:10px;border:1px solid var(--line);border-radius:10px;flex:1}
 .tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{font-size:12px;color:var(--muted)}.badge{padding:4px 8px;border-radius:99px;background:#eef2ff;color:#4338ca;font-size:12px}.delete{color:var(--danger);background:none;border:0;cursor:pointer}
 .bar{height:8px;background:#eef0f4;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:var(--accent)}.row{display:flex;justify-content:space-between;gap:10px;margin:12px 0;align-items:center}
-.notice{padding:10px;border-radius:10px;background:#eef2ff;color:#3730a3;font-size:13px;margin-bottom:12px}.error{color:var(--danger);font-size:13px;margin-top:8px}
+.notice{padding:10px;border-radius:10px;background:#eef2ff;color:#3730a3;font-size:13px;margin-bottom:12px;overflow-wrap:anywhere}.error{color:var(--danger);font-size:13px;margin-top:8px}
 @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:1fr}}
 @media(max-width:560px){
  html,body{width:100%;max-width:100%;overflow-x:hidden}
@@ -360,13 +360,30 @@ async function uploadPhotos(files,expenseId){
   }
 }
 async function addExpense(){
-  let amount=+$('amount').value;
-  if(!amount)return alert('Введите сумму.');
-  let id=crypto.randomUUID(),files=[...$('cameraPhotos').files,...$('galleryPhotos').files];
-  let {error}=await sb.from('repair_expenses').insert({id,project_key:projectCode,date:$('date').value||today,amount,currency:$('currency').value,rate:+$('expenseRate').value||settings.rate,room:$('room').value,category:$('category').value,description:$('desc').value.trim()||'Без описания'});
-  if(error)return showMsg(error.message);
-  try{await uploadPhotos(files,id)}catch(e){showMsg('Расход сохранён, но часть фото не загрузилась: '+e.message)}
-  $('amount').value='';$('desc').value='';$('cameraPhotos').value='';$('galleryPhotos').value='';$('photoPreview').textContent='Фото не выбраны';await loadAll();
+  const button=document.querySelector('#addExpensePanel > button.add');
+  try{
+    if(!sb || !projectCode){showMsg('Проект не подключён. Обновите страницу и откройте проект по коду.');return;}
+    const amount=Number(String($('amount').value).replace(',','.'));
+    if(!Number.isFinite(amount) || amount<=0){showMsg('Введите сумму больше нуля.');$('amount').focus();return;}
+    const rate=Number(String($('expenseRate').value).replace(',','.'));
+    if($('currency').value==='USD' && (!Number.isFinite(rate) || rate<=0)){showMsg('Укажите корректный курс USD/BYN.');$('expenseRate').focus();return;}
+    if(button){button.disabled=true;button.textContent='Сохраняю…';}
+    const id=crypto.randomUUID();
+    const files=[...$('cameraPhotos').files,...$('galleryPhotos').files];
+    const payload={id,project_key:projectCode,date:$('date').value||today,amount,currency:$('currency').value,rate:Number.isFinite(rate)&&rate>0?rate:(settings.rate||3.2),room:$('room').value,category:$('category').value,description:$('desc').value.trim()||'Без описания'};
+    const result=await sb.from('repair_expenses').insert(payload);
+    if(result.error){showMsg('Не удалось сохранить расход: '+result.error.message);return;}
+    if(files.length){
+      try{await uploadPhotos(files,id)}catch(e){showMsg('Расход сохранён, но фото не загрузились: '+(e?.message||e));}
+    }
+    $('amount').value='';$('desc').value='';$('cameraPhotos').value='';$('galleryPhotos').value='';$('photoPreview').textContent='Фото не выбраны';
+    await loadAll();
+    showMsg('Расход успешно добавлен.');
+  }catch(e){
+    showMsg('Ошибка при добавлении расхода: '+(e?.message||String(e)));
+  }finally{
+    if(button){button.disabled=false;button.textContent='Добавить расход';}
+  }
 }
 async function del(id){
   if(!confirm('Удалить расход и его фото?'))return;
@@ -379,7 +396,7 @@ async function del(id){
 function toBYN(e){return e.currency==='USD'?+e.amount*(+e.rate||settings.rate):+e.amount}
 function render(){ let spent=expenses.reduce((s,e)=>s+toBYN(e),0);$('spentBYN').textContent=fmt(spent)+' BYN';$('spentUSD').textContent='≈ $'+fmt(spent/settings.rate);$('count').textContent=expenses.length; let rooms=[...new Set(['Квартира целиком','Кухня','Ванная','Спальня','Гостиная','Коридор','Балкон','Другое',...expenses.map(e=>e.room)])];$('filterRoom').innerHTML='<option value="">Все комнаты</option>'+rooms.map(r=>`<option>${r}</option>`).join('');
 let q=($('search').value||'').toLowerCase(),fr=$('filterRoom').value,list=expenses.filter(e=>(!fr||e.room===fr)&&[e.description,e.room,e.category].join(' ').toLowerCase().includes(q));
-$('tbody').innerHTML=list.length?list.map(e=>`<tr><td>${e.date}</td><td>${e.description}</td><td><span class="badge">${e.room}</span></td><td>${e.category}</td><td><b>${fmt(e.amount)} ${e.currency}</b><div class="small">Курс: ${fmt(+e.rate||settings.rate)} · ≈ ${fmt(toBYN(e))} BYN</div></td><td><button class="btn" onclick="photos(${e.id})">📷</button></td><td><button class="delete" onclick="del('${e.id}')">✕</button></td></tr>`).join(''):'<tr><td colspan="7" class="small" style="text-align:center;padding:30px">Расходов пока нет</td></tr>';
+$('tbody').innerHTML=list.length?list.map(e=>`<tr><td>${e.date}</td><td>${e.description}</td><td><span class="badge">${e.room}</span></td><td>${e.category}</td><td><b>${fmt(e.amount)} ${e.currency}</b><div class="small">Курс: ${fmt(+e.rate||settings.rate)} · ≈ ${fmt(toBYN(e))} BYN</div></td><td><button class="btn" onclick="photos('${e.id}')">📷</button></td><td><button class="delete" onclick="del('${e.id}')">✕</button></td></tr>`).join(''):'<tr><td colspan="7" class="small" style="text-align:center;padding:30px">Расходов пока нет</td></tr>';
 let rm={},cm={};expenses.forEach(e=>{rm[e.room]=(rm[e.room]||0)+toBYN(e);cm[e.category]=(cm[e.category]||0)+toBYN(e)});$('rooms').innerHTML=Object.entries(rm).sort((a,b)=>b[1]-a[1]).map(x=>bar(x[0],x[1],spent)).join('')||'Нет данных';$('cats').innerHTML=Object.entries(cm).sort((a,b)=>b[1]-a[1]).map(x=>bar(x[0],x[1],spent)).join('')||'Нет данных'}
 function bar(k,v,total){return `<div class="row"><div><b>${k}</b><div class="small">${fmt(v)} BYN · $${fmt(v/settings.rate)}</div></div><div style="width:40%"><div class="bar"><i style="width:${total?Math.min(100,v/total*100):0}%"></i></div></div></div>`}
 async function photos(id){
