@@ -57,106 +57,62 @@ header{display:flex;justify-content:space-between;gap:15px;align-items:center;ma
   html,body{background:#f3f5f9!important}
   #app{
     max-width:1440px!important;
-    padding:28px 40px 90px!important;
+    width:100%!important;
+    padding:24px 40px 48px!important;
+    margin:0 auto!important;
   }
-
-  /* Clean desktop hierarchy */
-  #app > .grid{
+  #topHeader,#mobileNav{display:none!important}
+  .desktop-toolbar-actions{display:none!important}
+  #topStats{
     display:grid!important;
-    grid-template-columns:minmax(0,1.65fr) minmax(330px,.7fr)!important;
-    gap:24px!important;
+    grid-template-columns:repeat(2,minmax(220px,1fr))!important;
+    gap:16px!important;
+    margin:0 0 20px!important;
+  }
+  .layout{
+    display:grid!important;
+    grid-template-columns:minmax(0,1.65fr) minmax(300px,.85fr)!important;
     align-items:start!important;
+    gap:22px!important;
   }
-
-  #topStats{grid-column:1 / -1!important}
-  #addExpensePanel{grid-column:1!important}
-  #settingsPanel,#summaryPanel,#statsPanel{grid-column:2!important}
-  #expensesPanel{grid-column:1 / -1!important}
-
-  /* Expense form: meaningful field groups */
-  #addExpensePanel .form-grid,
-  #addExpensePanel .grid{
+  #addExpensePanel,#expensesPanel,.layout>div:nth-child(2)>.panel{
+    margin-top:0!important;
+    margin-bottom:18px!important;
+  }
+  #addExpensePanel .formgrid{
     display:grid!important;
-    grid-template-columns:1.05fr 1fr .75fr .9fr!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
     gap:14px!important;
     align-items:end!important;
   }
-
-  #addExpensePanel .field{
-    min-width:0!important;
+  #addExpensePanel .field{min-width:0!important}
+  #addExpensePanel .field label{
+    display:block!important;margin-bottom:6px!important;
+    font-size:12px!important;font-weight:700!important;color:var(--muted)!important;
   }
-
-  #addExpensePanel label{
-    display:block!important;
-    margin-bottom:6px!important;
-    font-size:12px!important;
-    font-weight:700!important;
-    color:var(--muted)!important;
-  }
-
-  #addExpensePanel input,
-  #addExpensePanel select{
-    width:100%!important;
-    min-height:44px!important;
+  #addExpensePanel input,#addExpensePanel select{
+    width:100%!important;min-width:0!important;min-height:42px!important;
     box-sizing:border-box!important;
   }
-
-  /* Description gets its own full-width row */
-  #addExpensePanel textarea{
-    width:100%!important;
-    min-height:82px!important;
-    box-sizing:border-box!important;
-    resize:vertical!important;
+  #addExpensePanel .field.full{grid-column:1/-1!important}
+  #addExpensePanel #expenseRateField{
+    background:#f7f8fb!important;border:1px solid var(--line)!important;
+    border-radius:12px!important;padding:10px!important;
   }
-
-  /* Photo area is a distinct visual block */
-  #addExpensePanel .photos,
-  #addExpensePanel .photo-grid,
-  #addExpensePanel .photo-actions{
-    margin-top:14px!important;
-  }
-
-  /* Put currency + rate visually together when possible */
-  #expenseRateField{
-    background:#f7f8fb!important;
-    border:1px solid var(--line)!important;
-    border-radius:12px!important;
-    padding:10px!important;
-  }
-  #expenseRateField label{margin-bottom:5px!important}
-
-  /* Buttons remain compact, not giant */
-  #addExpensePanel button{
-    min-height:42px!important;
-  }
-
-  /* Desktop table */
-  #expensesPanel table{
-    width:100%!important;
-    border-collapse:separate!important;
-    border-spacing:0!important;
-    font-size:14px!important;
-  }
-  #expensesPanel th{
-    position:sticky!important;
-    top:0!important;
-    z-index:3!important;
-    background:#f7f8fb!important;
-    white-space:nowrap!important;
-  }
-  #expensesPanel td,#expensesPanel th{
-    padding:11px 10px!important;
-    vertical-align:middle!important;
-  }
+  #addExpensePanel .photo-buttons{display:flex!important;gap:10px!important}
+  #addExpensePanel .photo-buttons .add{width:auto!important;margin:0!important}
+  #addExpensePanel>button.add{width:auto!important;min-width:190px!important;margin-top:14px!important}
+  #expensesPanel .tablewrap{overflow-x:auto!important}
+  #expensesPanel table{width:100%!important;border-collapse:separate!important;border-spacing:0!important;font-size:13px!important}
+  #expensesPanel th{background:#f7f8fb!important;white-space:nowrap!important}
+  #expensesPanel td,#expensesPanel th{padding:10px 9px!important;vertical-align:middle!important}
   #expensesPanel tbody tr:hover{background:#f7f9fc!important}
-
-  #expensesPanel input,#expensesPanel select{min-height:40px!important}
-
-  /* Export is intentionally not in the top area */
-  #mobileNav{display:none!important}
-  #topHeader{display:none!important}
+  .export-footer{
+    display:flex!important;max-width:none!important;
+    margin:22px 0 0!important;padding:16px 18px!important;
+    align-items:center!important;justify-content:space-between!important;
+  }
 }
-
 @media (min-width:1250px){
   #app{padding-left:52px!important;padding-right:52px!important}
 }
@@ -286,7 +242,7 @@ body{
 .export-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:26px 0 0;padding:16px 18px;background:#fff;border:1px solid var(--line);border-radius:16px}
 .export-footer-text strong{display:block;font-size:14px;margin-bottom:3px}
 .export-footer-text span{font-size:12px;color:var(--muted)}
-.export-footer button{min-height:40px;white-space:nowrap}
+.export-footer button{min-height:40px;white-space:nowrap}.export-footer .actions{display:flex;gap:8px;flex-wrap:wrap}
 @media(max-width:560px){
   .export-footer{margin:20px 0 0;align-items:flex-start}
   .export-footer-text span{display:block}
@@ -295,29 +251,15 @@ body{
 
 <style id="desktop-actions-cleanup">
 @media (min-width:900px){
-  #desktopToolbar{display:none!important}
-  #addExpensePanel button[onclick*="scrollToId('addExpensePanel')"],
-  #addExpensePanel button[onclick*="scrollToId(&quot;addExpensePanel&quot;)"]{
-    display:none!important;
-  }
-  .desktop-toolbar,
-  .desktop-toolbar-actions{
-    display:none!important;
-  }
+  .desktop-toolbar-actions{display:none!important}
+  #mobileNav{display:none!important}
 }
 </style>
 
 <style id="desktop-export-cleanup">
 @media (min-width:900px){
-  #app button[onclick*="exportCSV"]:not(.export-footer button){
-    display:none!important;
-  }
-  #mobileNav button[onclick*="exportCSV"]{
-    display:none!important;
-  }
-  .export-footer{
-    display:flex!important;
-  }
+  #app button[onclick*="exportCSV"]:not(.export-footer button){display:none!important}
+  .export-footer{display:flex!important}
 }
 </style>
 </head>
@@ -340,7 +282,6 @@ body{
     <button type="button" class="add" onclick="scrollToId('addExpensePanel')">➕ Добавить расход</button>
     <button type="button" onclick="exportCSV()">⬇️ Экспорт CSV</button>
   </div>
-</div>
 
 
 <div id="msg" class="notice hidden"></div>
@@ -471,6 +412,10 @@ if(projectCode){
     <strong>Данные проекта</strong>
     <span>Экспортируйте расходы в CSV для Excel или архива.</span>
   </div>
-  <button type="button" onclick="exportCSV()">⬇️ Экспорт CSV</button>
+  <div class="actions">
+    <button type="button" class="btn" onclick="changeProject()">🔄 Сменить проект</button>
+    <button type="button" class="btn" onclick="exportCSV()">⬇️ Экспорт CSV</button>
+  </div>
+</div>
 </div>
 </body></html>
